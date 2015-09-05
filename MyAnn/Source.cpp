@@ -88,6 +88,6 @@ void convolve2D(RowVector& input,Matrix)
 
 int main()
 {
-	RowVector input(1920*1080);	//Image as row vector
+	RowVector input(1920*1080*3);	//RGB image as row vector
 	return 0;
 }
