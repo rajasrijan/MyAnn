@@ -7,17 +7,18 @@ Matrix::Matrix() :rows(0), cols(0), matrix_order(ROW_MAJOR), data(0)
 
 Matrix::Matrix(size_t _rows, size_t _cols) : rows(_rows), cols(_cols), matrix_order(ROW_MAJOR), data(new double[_rows*_cols])
 {
-	
+
 }
 
 Matrix::Matrix(size_t _rows, size_t _cols, shared_ptr<double> _data) : rows(_rows), cols(_cols), matrix_order(ROW_MAJOR), data(_data)
 {
-	
+
 }
 
 
 Matrix::~Matrix()
 {
+	
 }
 
 void Matrix::Mul(Matrix &a, Matrix &b, Matrix &out)

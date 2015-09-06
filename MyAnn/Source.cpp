@@ -1,14 +1,15 @@
 #include <iostream>
 #include <memory>
 #include <ctime>
+#include <amp.h>
+
 #include "Matrix.h"
 #include "RowVector.h"
+
 using namespace std;
+using namespace Concurrency;
 
 #define getIndex(x,xs,y,ys) ((x%xs) + (y*ys))
-
-typedef double const * const INP;
-typedef double * const OUT;
 
 Matrix createLayer(int input, int output)
 {
@@ -81,13 +82,28 @@ void trainLayerConstructiveDivergence(RowVector &input, Matrix &w,int iter)
 	}
 }
 
-void convolve2D(RowVector& input,Matrix)
+void convolve2D(RowVector& input,Matrix w,RowVector& output,size_t window_height,size_t window_width,size_t step)
 {
 
 }
 
+void convolve1D(RowVector& input,Matrix w,RowVector& output,size_t window,size_t step)
+{
+	array_view<const double,1> input_view(input.rows,input.data.get());
+	array_view<const double,2> weight_view(w.rows,w.cols,w.data.get());
+	array_view<double,1> output_view(output.rows,output.data.get());
+
+	parallel_for_each(
+		output_view.extent,
+		[=](index<1> idx)restrict(amp)
+	{
+		output_view[idx]=window;
+	}
+	);
+}
+
 int main()
 {
-	RowVector input(1920*1080*3);	//RGB image as row vector
+	RowVector input(10000);	//RGB image as row vector
 	return 0;
 }

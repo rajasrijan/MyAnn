@@ -14,7 +14,7 @@ public:
 	const size_t rows;
 	const size_t cols;
 	size_t matrix_order;
-	const shared_ptr<double> data;
+	shared_ptr<double> data;
 	Matrix();
 	Matrix(size_t _rows, size_t _cols);
 	Matrix(size_t _rows, size_t _cols, shared_ptr<double> _data);
