@@ -34,7 +34,7 @@ void getLayerBackward(RowVector &in, Matrix &w, RowVector &out)
 	Matrix::Mul(in.getColVector(), w, out.getColVector());
 }
 
-void trainLayerConstructiveDivergence(RowVector &input, Matrix &w,int iter)
+void trainLayerConstructiveDivergence(RowVector &input, Matrix &w, int iter)
 {
 	float alpha = 0.01;
 	RowVector v(input.rows);
@@ -82,28 +82,42 @@ void trainLayerConstructiveDivergence(RowVector &input, Matrix &w,int iter)
 	}
 }
 
-void convolve2D(RowVector& input,Matrix w,RowVector& output,size_t window_height,size_t window_width,size_t step)
+void dummy(float* test) restrict(amp)
 {
-
+	test[0] = 1;
 }
 
-void convolve1D(RowVector& input,Matrix w,RowVector& output,size_t window,size_t step)
+void convolve(Matrix& input, Matrix& w, Matrix& output, size_t window, size_t step)
 {
-	array_view<const double,1> input_view(input.rows,input.data.get());
-	array_view<const double,2> weight_view(w.rows,w.cols,w.data.get());
-	array_view<double,1> output_view(output.rows,output.data.get());
+	array_view<const float, 3> input_view(input.rows, input.cols, input.depth, input.data.get());
+	array_view<const float, 2> weight_view(w.rows, w.cols, w.data.get());
+	array_view<float, 2> output_view(output.rows, output.cols, output.data.get());
+	output_view.discard_data();
 
-	parallel_for_each(
-		output_view.extent,
-		[=](index<1> idx)restrict(amp)
+	try
 	{
-		output_view[idx]=window;
+		parallel_for_each(
+			output_view.extent,
+			[=](index<2> idx)restrict(amp)
+		{
+			dummy(&output_view[idx]);
+		}
+		);
 	}
-	);
+	catch (exception e)
+	{
+		cout << e.what();
+		exit(1);
+	}
 }
 
 int main()
 {
-	RowVector input(10000);	//RGB image as row vector
+	RowVector input(10);	//RGB image as row vector
+	RowVector output(10);	//RGB image as row vector
+	Matrix w(10,10);	//	weight.
+
+	convolve(input, w, output, 3, 1);
+
 	return 0;
 }

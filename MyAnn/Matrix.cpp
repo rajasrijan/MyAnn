@@ -1,16 +1,21 @@
 #include "Matrix.h"
 
 
-Matrix::Matrix() :rows(0), cols(0), matrix_order(ROW_MAJOR), data(0)
+Matrix::Matrix() :rows(0), cols(0), depth(0), matrix_order(ROW_MAJOR), data(0)
 {
 }
 
-Matrix::Matrix(size_t _rows, size_t _cols) : rows(_rows), cols(_cols), matrix_order(ROW_MAJOR), data(new double[_rows*_cols])
+Matrix::Matrix(size_t _rows, size_t _cols) : rows(_rows), cols(_cols), depth(1), matrix_order(ROW_MAJOR), data(new float[_rows*_cols])
 {
 
 }
 
-Matrix::Matrix(size_t _rows, size_t _cols, shared_ptr<double> _data) : rows(_rows), cols(_cols), matrix_order(ROW_MAJOR), data(_data)
+Matrix::Matrix(size_t _rows, size_t _cols, shared_ptr<float> _data) : rows(_rows), cols(_cols), depth(1), matrix_order(ROW_MAJOR), data(_data)
+{
+
+}
+
+Matrix::Matrix(size_t _rows, size_t _cols, size_t _depth, shared_ptr<float> _data) : rows(_rows), cols(_cols), depth(_depth), matrix_order(ROW_MAJOR), data(_data)
 {
 
 }
@@ -18,7 +23,7 @@ Matrix::Matrix(size_t _rows, size_t _cols, shared_ptr<double> _data) : rows(_row
 
 Matrix::~Matrix()
 {
-	
+
 }
 
 void Matrix::Mul(Matrix &a, Matrix &b, Matrix &out)
@@ -32,7 +37,7 @@ void Matrix::Mul(Matrix &a, Matrix &b, Matrix &out)
 	{
 		for (size_t j = 0; j < b.cols; j++)
 		{
-			double val = 0;
+			float val = 0;
 			for (size_t k = 0; k < a.cols; k++)
 			{
 				val += a.data.get()[(i*a.cols) + k] * b.data.get()[(k*b.cols) + j];
@@ -42,7 +47,23 @@ void Matrix::Mul(Matrix &a, Matrix &b, Matrix &out)
 	}
 }
 
-void Matrix::Mul(double c, Matrix &out)
+void Matrix::Mul(const double* a, size_t a_rows, size_t a_cols, size_t a_stride, const double* b, size_t b_rows, size_t b_cols, size_t b_stride, double* out, size_t out_rows, size_t out_cols, size_t out_stride)restrict(amp, cpu)
+{
+	for (size_t i = 0; i < a_rows; i++)
+	{
+		for (size_t j = 0; j < b_cols; j++)
+		{
+			float val = 0;
+			for (size_t k = 0; k < a_cols; k++)
+			{
+				val += a[(i*a_cols) + k] * b[(k*b_cols) + j];
+			}
+			out[(i*b_cols) + j] = val;
+		}
+	}
+}
+
+void Matrix::Mul(float c, Matrix &out)
 {
 	if ((out.cols == 0) || (out.rows == 0))
 	{
@@ -92,7 +113,7 @@ void Matrix::TransposeMul(Matrix &aT, Matrix &b, Matrix &out)
 	{
 		for (size_t j = 0; j < b.cols; j++)
 		{
-			double val = 0;
+			float val = 0;
 			for (size_t k = 0; k < aT.rows; k++)
 			{
 				val += aT.data.get()[i + (k*aT.cols)] * b.data.get()[(k*b.cols) + j];

@@ -6,7 +6,7 @@ class ColVector :
 public:
 	ColVector();
 	ColVector(size_t size);
-	ColVector(size_t size,shared_ptr<double> data);
+	ColVector(size_t size,shared_ptr<float> data);
 	~ColVector();
 };
 
