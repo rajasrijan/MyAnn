@@ -113,11 +113,21 @@ void convolve(Matrix& input, Matrix& w, Matrix& output, size_t window, size_t st
 
 int main()
 {
-	RowVector input(10);	//RGB image as row vector
-	RowVector output(10);	//RGB image as row vector
-	Matrix w(10,10);	//	weight.
+	Matrix a(4, 4);
+	Matrix b(4, 4);
+	Matrix out(4, 4);
+	for (size_t i = 0; i < 4*4; i++)
+	{
+		a.data.get()[i] = i;
+		b.data.get()[i] = i + 1;
+	}
+	a.print();
+	cout << "\n";
+	b.print();
+	cout << "\n";
 
-	convolve(input, w, output, 3, 1);
-
+	Matrix::Mul(a.data.get()+1, 2, 2, 2, b.data.get(), 2, 2, 2,out.data.get(),2,2,2);
+	out.print();
+	cout << "\n";
 	return 0;
 }
