@@ -20,7 +20,7 @@ void initLayerRandom(Matrix &w)
 {
 	for (size_t i = 0; i < w.rows*w.cols; i++)
 	{
-		w.data.get()[i] = sin((unsigned)time(0) * i);
+		w.data.get()[i] = sinf((float)(unsigned)time(0) * (float)i);
 	}
 }
 
@@ -34,9 +34,9 @@ void getLayerBackward(RowVector &in, Matrix &w, RowVector &out)
 	Matrix::Mul(in.getColVector(), w, out.getColVector());
 }
 
-void trainLayerConstructiveDivergence(RowVector &input, Matrix &w, int iter)
+void trainLayerConstructiveDivergence(RowVector &input, Matrix &w, size_t iter)
 {
-	float alpha = 0.01;
+	float alpha = 0.01f;
 	RowVector v(input.rows);
 	RowVector h(w.rows);
 	Matrix positiveGradient(w.rows, w.cols);
@@ -82,17 +82,15 @@ void trainLayerConstructiveDivergence(RowVector &input, Matrix &w, int iter)
 	}
 }
 
-void dummy(float* test) restrict(amp)
+void convolve(Matrix& input, Matrix& w, Matrix& output, const int window, const size_t step)
 {
-	test[0] = 1;
-}
-
-void convolve(Matrix& input, Matrix& w, Matrix& output, size_t window, size_t step)
-{
-	array_view<const float, 3> input_view(input.rows, input.cols, input.depth, input.data.get());
+	array_view<const float, 2> input_view(input.rows, input.cols, input.data.get());
 	array_view<const float, 2> weight_view(w.rows, w.cols, w.data.get());
 	array_view<float, 2> output_view(output.rows, output.cols, output.data.get());
 	output_view.discard_data();
+
+	const size_t x_lim = output.rows;
+	const size_t y_lim = output.cols;
 
 	try
 	{
@@ -100,7 +98,22 @@ void convolve(Matrix& input, Matrix& w, Matrix& output, size_t window, size_t st
 			output_view.extent,
 			[=](index<2> idx)restrict(amp)
 		{
-			dummy(&output_view[idx]);
+			float val = 0;
+			int half_range = (window / 2);
+
+			//	magic
+			array_view<const float, 2> weight_subview(window, window, &weight_view[index<2>(0, 0)]);
+			//	more magic
+			for (int x = 0; x < window; x++)
+			{
+				for (int y = 0; y < window; y++)
+				{
+					index<2> i = idx + index<2>(x - half_range, y - half_range);
+					if ((i[0] >= 0) && (i[1] >= 0) && (i[0] < x_lim) && (i[1] < y_lim))
+						val += weight_subview[index<2>(x, y)] * input_view[i];
+				}
+			}
+			output_view[idx] = val;
 		}
 		);
 	}
@@ -114,19 +127,22 @@ void convolve(Matrix& input, Matrix& w, Matrix& output, size_t window, size_t st
 int main()
 {
 	Matrix a(4, 4);
-	Matrix b(4, 4);
+	Matrix w(1, 9);
 	Matrix out(4, 4);
-	for (size_t i = 0; i < 4*4; i++)
+	for (size_t i = 0; i < 4 * 4; i++)
 	{
-		a.data.get()[i] = i;
-		b.data.get()[i] = i + 1;
+		a.data.get()[i] = (float)i;
+	}
+	for (size_t i = 0; i < 9 * 1; i++)
+	{
+		w.data.get()[i] = (float)i + 1.0f;
 	}
 	a.print();
 	cout << "\n";
-	b.print();
+	w.print();
 	cout << "\n";
 
-	Matrix::Mul(a.data.get()+1, 2, 2, 2, b.data.get(), 2, 2, 2,out.data.get(),2,2,2);
+	convolve(a, w, out, 3, 1);
 	out.print();
 	cout << "\n";
 	return 0;

@@ -24,7 +24,7 @@ public:
 	~Matrix();
 
 	static void Mul(Matrix &a, Matrix &b, Matrix &out);
-	static void Mul(const double* a, size_t a_rows, size_t a_cols, size_t a_stride, const double* b, size_t b_rows, size_t b_cols, size_t b_stride, double* out, size_t out_rows, size_t out_cols, size_t out_stride)restrict(amp, cpu);
+	static void Mul(float* a, size_t a_rows, size_t a_cols, size_t a_stride, float* b, size_t b_rows, size_t b_cols, size_t b_stride, float* out, size_t out_rows, size_t out_cols, size_t out_stride)restrict(amp, cpu);
 	static void Mul(float c, Matrix &out);
 	static void Add(Matrix &a, Matrix &b, Matrix &out);
 	static void Sub(Matrix &a, Matrix &b, Matrix &out);

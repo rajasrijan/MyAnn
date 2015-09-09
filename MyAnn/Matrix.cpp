@@ -47,7 +47,7 @@ void Matrix::Mul(Matrix &a, Matrix &b, Matrix &out)
 	}
 }
 
-void Matrix::Mul(const double* a, size_t a_rows, size_t a_cols, size_t a_stride, const double* b, size_t b_rows, size_t b_cols, size_t b_stride, double* out, size_t out_rows, size_t out_cols, size_t out_stride)restrict(amp, cpu)
+void Matrix::Mul(float* a, size_t a_rows, size_t a_cols, size_t a_stride, float* b, size_t b_rows, size_t b_cols, size_t b_stride, float* out, size_t out_rows, size_t out_cols, size_t out_stride)restrict(amp, cpu)
 {
 	for (size_t i = 0; i < a_rows; i++)
 	{
@@ -56,9 +56,9 @@ void Matrix::Mul(const double* a, size_t a_rows, size_t a_cols, size_t a_stride,
 			float val = 0;
 			for (size_t k = 0; k < a_cols; k++)
 			{
-				val += a[(i*a_cols) + k] * b[(k*b_cols) + j];
+				val += a[(i*(a_cols+a_stride)) + k] * b[(k*(b_cols+b_stride)) + j];
 			}
-			out[(i*b_cols) + j] = val;
+			out[(i*(b_cols+out_stride)) + j] = val;
 		}
 	}
 }
