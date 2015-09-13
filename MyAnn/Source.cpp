@@ -84,36 +84,44 @@ void trainLayerConstructiveDivergence(RowVector &input, Matrix &w, size_t iter)
 
 void convolve(Matrix& input, Matrix& w, Matrix& output, const int window, const size_t step)
 {
-	array_view<const float, 2> input_view(input.rows, input.cols, input.data.get());
+	if ((window*window*input.depth)!=w.cols)
+	{
+		cout<<"weight size and window size dont match.";
+		throw("weight size and window size dont match.");
+	}
+	array_view<const float, 3> input_view(input.rows, input.cols,input.depth, input.data.get());
 	array_view<const float, 2> weight_view(w.rows, w.cols, w.data.get());
-	array_view<float, 2> output_view(output.rows, output.cols, output.data.get());
+	array_view<float, 3> output_view(output.rows, output.cols,output.depth, output.data.get());
 	output_view.discard_data();
 
-	const size_t x_lim = output.rows;
-	const size_t y_lim = output.cols;
+	const int x_lim = output.rows;
+	const int y_lim = output.cols;
+	const int depth = w.cols;
 
 	try
 	{
 		parallel_for_each(
-			output_view.extent,
+			Concurrency::extent<2>(x_lim,y_lim),
 			[=](index<2> idx)restrict(amp)
 		{
 			float val = 0;
 			int half_range = (window / 2);
-
-			//	magic
-			array_view<const float, 2> weight_subview(window, window, &weight_view[index<2>(0, 0)]);
-			//	more magic
-			for (int x = 0; x < window; x++)
+			for (int d = 0; d < depth; d++)
 			{
-				for (int y = 0; y < window; y++)
+				//	magic
+				array_view<const float, 2> weight_subview(window, window, &weight_view[index<2>(0, 0)]);
+				//	Matrix multiplication shortcut a.k.a magic
+				for (int x = 0; x < window; x++)
 				{
-					index<2> i = idx + index<2>(x - half_range, y - half_range);
-					if ((i[0] >= 0) && (i[1] >= 0) && (i[0] < x_lim) && (i[1] < y_lim))
-						val += weight_subview[index<2>(x, y)] * input_view[i];
+					for (int y = 0; y < window; y++)
+					{
+						index<3> i = index<3>(idx[0] + x - half_range,idx[1] + y - half_range,d);
+						if ((i[0] >= 0) && (i[1] >= 0) && (i[0] < x_lim) && (i[1] < y_lim))
+							val += weight_subview[index<2>(x, y)] * input_view[i];
+					}
 				}
+				output_view[index<3>(idx[0],idx[1],d)] = val;
 			}
-			output_view[idx] = val;
 		}
 		);
 	}
@@ -127,9 +135,9 @@ void convolve(Matrix& input, Matrix& w, Matrix& output, const int window, const 
 int main()
 {
 	Matrix a(4, 4);
-	Matrix w(1, 9);
+	Matrix w(1, 9*3,1,true);
 	Matrix out(4, 4);
-	for (size_t i = 0; i < 4 * 4; i++)
+	for (size_t i = 0; i < a.rows*a.cols*a.depth; i++)
 	{
 		a.data.get()[i] = (float)i;
 	}

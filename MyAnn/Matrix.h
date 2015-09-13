@@ -18,7 +18,7 @@ public:
 	size_t matrix_order;
 	shared_ptr<float> data;
 	Matrix();
-	Matrix(size_t _rows, size_t _cols);
+	Matrix(size_t _rows, size_t _cols,size_t _depth=1,bool initilize=false);
 	Matrix(size_t _rows, size_t _cols, shared_ptr<float> _data);
 	Matrix(size_t _rows, size_t _cols, size_t _depth, shared_ptr<float> _data);
 	~Matrix();
@@ -35,12 +35,20 @@ public:
 	{
 		for (size_t i = 0; i < rows; i++)
 		{
-			cout << "{";
+			cout << "[ ";
 			for (size_t j = 0; j < cols; j++)
 			{
-				cout << data.get()[(i*cols) + j] << " ";
+				if (depth>1)
+					cout<<"(";
+				for (size_t k = 0; k < depth; k++)
+				{
+					cout << data.get()[(((i*cols) + j)*depth) + k]<<((k==(depth-1))?"":",");
+				}
+				if (depth>1)
+					cout<<")";
+				cout<<" ";
 			}
-			cout << "}\n";
+			cout << "]\n";
 		}
 	}
 };

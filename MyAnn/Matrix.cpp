@@ -5,9 +5,12 @@ Matrix::Matrix() :rows(0), cols(0), depth(0), matrix_order(ROW_MAJOR), data(0)
 {
 }
 
-Matrix::Matrix(size_t _rows, size_t _cols) : rows(_rows), cols(_cols), depth(1), matrix_order(ROW_MAJOR), data(new float[_rows*_cols])
+Matrix::Matrix(size_t _rows, size_t _cols,size_t _depth,bool initilize) : rows(_rows), cols(_cols), depth(_depth), matrix_order(ROW_MAJOR), data(new float[_rows*_cols*_depth])
 {
-
+	for (size_t i = 0; initilize && (i < rows*cols*depth); i++)
+	{
+		data.get()[i]=0.0f;
+	}
 }
 
 Matrix::Matrix(size_t _rows, size_t _cols, shared_ptr<float> _data) : rows(_rows), cols(_cols), depth(1), matrix_order(ROW_MAJOR), data(_data)
