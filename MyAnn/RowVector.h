@@ -8,7 +8,7 @@ public:
 	RowVector();
 	RowVector(int size);
 	~RowVector();
-	
+
 	ColVector getColVector();
 };
 

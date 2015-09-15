@@ -5,11 +5,11 @@ Matrix::Matrix() :rows(0), cols(0), depth(0), matrix_order(ROW_MAJOR), data(0)
 {
 }
 
-Matrix::Matrix(size_t _rows, size_t _cols,size_t _depth,bool initilize) : rows(_rows), cols(_cols), depth(_depth), matrix_order(ROW_MAJOR), data(new float[_rows*_cols*_depth])
+Matrix::Matrix(size_t _rows, size_t _cols, size_t _depth, bool initilize) : rows(_rows), cols(_cols), depth(_depth), matrix_order(ROW_MAJOR), data(new float[_rows*_cols*_depth])
 {
 	for (size_t i = 0; initilize && (i < rows*cols*depth); i++)
 	{
-		data.get()[i]=0.0f;
+		data.get()[i] = 0.0f;
 	}
 }
 
@@ -59,9 +59,9 @@ void Matrix::Mul(float* a, size_t a_rows, size_t a_cols, size_t a_stride, float*
 			float val = 0;
 			for (size_t k = 0; k < a_cols; k++)
 			{
-				val += a[(i*(a_cols+a_stride)) + k] * b[(k*(b_cols+b_stride)) + j];
+				val += a[(i*(a_cols + a_stride)) + k] * b[(k*(b_cols + b_stride)) + j];
 			}
-			out[(i*(b_cols+out_stride)) + j] = val;
+			out[(i*(b_cols + out_stride)) + j] = val;
 		}
 	}
 }

@@ -5,7 +5,7 @@ RowVector::RowVector()
 {
 }
 
-RowVector::RowVector(int size) : Matrix(size,1)
+RowVector::RowVector(int size) : Matrix(size, 1)
 {
 }
 
