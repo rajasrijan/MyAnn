@@ -79,6 +79,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bitmap.h" />
     <ClCompile Include="ColVector.cpp" />
     <ClCompile Include="Matrix.cpp" />
     <ClCompile Include="RowVector.cpp" />

@@ -1,3 +1,5 @@
+#define NOMINMAX
+
 #include <iostream>
 #include <memory>
 #include <ctime>
@@ -5,6 +7,7 @@
 
 #include "Matrix.h"
 #include "RowVector.h"
+#include "bitmap.h"
 
 using namespace std;
 using namespace Concurrency;
