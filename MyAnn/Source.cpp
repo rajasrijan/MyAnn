@@ -1,9 +1,11 @@
 #define NOMINMAX
+#define _SCL_SECURE_NO_WARNINGS
 
 #include <iostream>
 #include <memory>
 #include <ctime>
 #include <amp.h>
+#include <algorithm>
 
 #include "Matrix.h"
 #include "RowVector.h"
@@ -19,11 +21,22 @@ Matrix createLayer(int input, int output)
 	return Matrix(output, input);
 }
 
+Matrix CreateConvLayer(int window,int channels,int features)
+{
+	Matrix ret(features,window*window*channels);
+	size_t seed = (int)time(0);
+	for (size_t i = 0; i < ret.rows*ret.cols*ret.depth; i++)
+	{
+		ret.getData()[i]=sinf((float)(i*i+seed)/180.0f);
+	}
+	return ret;
+}
+
 void initLayerRandom(Matrix &w)
 {
 	for (size_t i = 0; i < w.rows*w.cols; i++)
 	{
-		w.data.get()[i] = sinf((float)(unsigned)time(0) * (float)i);
+		w.getData()[i] = sinf((float)(unsigned)time(0) * (float)i);
 	}
 }
 
@@ -92,10 +105,10 @@ void convolve(Matrix& input, Matrix& w, Matrix& output, const int window, const 
 		cout << "Sanity check failed.Insane input.\n";
 		throw("Sanity check failed.Insane input.");
 	}
-	array_view<const float, 3> input_view(input.rows, input.cols, input.depth, input.data.get());
-	array_view<const float, 2> weight_view(w.rows, w.cols, w.data.get());
-	array_view<float, 3> output_view(output.rows, output.cols, output.depth, output.data.get());
-	output_view.discard_data();
+	array_view<float, 3> input_view(input.rows, input.cols, input.depth, input.getData());
+	array_view<float, 2> weight_view(w.rows, w.cols, w.getData());
+	array_view<float, 3> output_view(output.rows, output.cols, output.depth, output.getData());
+	//output_view.discard_data();
 
 	const int x_lim = output.rows;
 	const int y_lim = output.cols;
@@ -107,27 +120,33 @@ void convolve(Matrix& input, Matrix& w, Matrix& output, const int window, const 
 			Concurrency::extent<2>(x_lim, y_lim),
 			[=](index<2> idx)restrict(amp)
 		{
-
 			int half_range = (window / 2);
 			for (int d = 0; d < depth; d++)
 			{
 				float val = 0;
 				//	magic
-				array_view<const float, 2> weight_subview(window, window, &weight_view[index<2>(d, 0)]);
+				array_view<const float, 3> weight_subview(window, window,3, &weight_view[index<2>(d, 0)]);
 				//	Matrix multiplication shortcut a.k.a magic
 				for (int x = 0; x < window; x++)
 				{
 					for (int y = 0; y < window; y++)
 					{
-						index<3> i = index<3>(idx[0] + x - half_range, idx[1] + y - half_range, 0);
-						if ((i[0] >= 0) && (i[1] >= 0) && (i[0] < x_lim) && (i[1] < y_lim))
-							val += weight_subview[index<2>(x, y)] * input_view[i];
+						for (int c = 0; c < 3; c++)
+						{
+							index<3> i = index<3>(idx[0] + x - half_range, idx[1] + y - half_range, c);
+							if ((i[0] >= 0) && (i[1] >= 0) && (i[0] < x_lim) && (i[1] < y_lim))
+							{
+								val += weight_subview[index<3>(x, y,c)] * input_view[i];
+							}
+						}
 					}
 				}
 				output_view[index<3>(idx[0], idx[1], d)] = val;
 			}
 		}
 		);
+		output_view.synchronize();
+
 	}
 	catch (exception e)
 	{
@@ -138,27 +157,37 @@ void convolve(Matrix& input, Matrix& w, Matrix& output, const int window, const 
 
 int main()
 {
-	Matrix a(4, 4);
-	Matrix w(2, 9, 1, true);
-	Matrix out(4, 4, 2);
-	for (size_t i = 0; i < a.rows*a.cols*a.depth; i++)
+	float data[16];
+	float i=0.0;
+	std::generate_n(data,16,[&i]{return i++;});
+	for (int i = 0; i < 8; i++)
 	{
-		a.data.get()[i] = (float)i;
-	}
-	for (size_t j = 0; j < w.rows; j++)
-	{
-		for (size_t i = 0; i < w.cols; i++)
+		for (int j = 0; j < 2; j++)
 		{
-			w.data.get()[(j*w.cols) + i] = (float)(i + j);
+			cout<<data[(i*2)+j]<<",";
 		}
+		cout<<"\n";
 	}
-	a.print();
-	cout << "\n";
-	w.print();
-	cout << "\n";
+	cout<<"\n\n";
+	im2col<float,float*> a(2,8,3,3);
+	for(int j=0;j<16;j++)
+	{
+		for (int i = 0; i < 9; i++)
+		{
+			cout<<a.at((float*)data,i,j)<<",";
+		}
+		cout<<"\n";
+	}
+	/*bitmap img("test.bmp");
+	bitmap img2;
+	Matrix a = img.getMatrix();
+	Matrix w=CreateConvLayer(3,3,3);
+	Matrix out(a.rows,a.cols,a.depth);
 
-	convolve(a, w, out, 3, 1);
-	out.print();
-	cout << "\n";
+	convolve(a,w,out,3,1);
+
+	img2.setMatrix(out);
+	img2.save_image("data.bmp");*/
+	
 	return 0;
 }
