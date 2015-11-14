@@ -139,6 +139,11 @@ float* Matrix::getData()
 	return data.get();
 }
 
+int Matrix::size()
+{
+	return rows*cols*depth;
+}
+
 void Matrix::TransposeMul(Matrix &aT, Matrix &b, Matrix &out)
 {
 	if ((aT.rows != b.rows) || (out.cols == 0) || (out.rows == 0) || (out.rows != aT.cols) || (out.cols != b.cols))

@@ -45,6 +45,7 @@ public:
 	static void deepCopy(Matrix& input, Matrix& output);
 	float* getData();
 	Matrix transpose();
+	int size();
 	void toGpu();
 	void discardGpu();
 	void fromGpu();
@@ -72,28 +73,33 @@ public:
 	}
 };
 
-template<typename T,typename V>
 class im2col
 {
-	int width,height,_wx,_wy;
+	int width,height,depth,_wx,_wy;
+	array_view<float,1> data;
 public:
-	im2col(int x,int y,int window_x,int window_y)
-		: width(x),height(y),_wx(window_x),_wy(window_y)
+	im2col(array_view<float,1> _data,int x,int y,int channel,int window_x,int window_y)__GPU
+		: data(_data),width(x),height(y),depth(channel),_wx(window_x),_wy(window_y)
 	{
 
 	}
-	~im2col()
+	~im2col()__GPU
 	{
 
 	}
-	T at(V data,int x,int y)
+	float at(int x,int y)__GPU
 	{
-		int a = (y%width)+(x%_wx)-(_wx/2);
-		int b = (y/width)+(x/_wx)-(_wy/2);
-		//cout<<"("<<a<<","<<b<<")";
-		if ((a<0)||(b<0)||(a>=width)||(b>=height))
-			return 0.0f;
-		else
-			return data[(b*width)+a];
+		int a,b,channel;
+
+		channel=x%depth;
+		x/=depth;
+
+		a=(x%_wx) - (_wx/2) + (y%width);
+
+		b=(x/_wx) - (_wy/2) + (y/width);
+
+		if((a<0)||(b<0)||(a>=width)||(b>=height))
+			return 0.0;
+		return data[channel + (depth*(a + (b*width)))];
 	}
 };

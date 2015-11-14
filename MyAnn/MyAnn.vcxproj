@@ -83,12 +83,14 @@
     <ClInclude Include="bitmap.h" />
     <ClCompile Include="ColVector.cpp" />
     <ClCompile Include="Matrix.cpp" />
+    <ClCompile Include="my_view.cpp" />
     <ClCompile Include="RowVector.cpp" />
     <ClCompile Include="Source.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ColVector.h" />
     <ClInclude Include="Matrix.h" />
+    <ClInclude Include="my_view.h" />
     <ClInclude Include="RowVector.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
